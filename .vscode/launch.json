@@ -1,0 +1,17 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "go-smoke",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "remotePath": "",
+            "port": 2345,
+            "host": "127.0.0.1",
+            "program": "${workspaceRoot}",
+            "env": {},
+            "args": ["--mode=check", "--minIssue=49", "--outputDir=C:\\Users\\Tom\\Downloads\\magpi\\"]
+        }
+    ]
+}
