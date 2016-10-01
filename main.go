@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
@@ -22,8 +23,6 @@ type endpoint struct {
 
 func main() {
 
-	color.Cyan("Prints text in cyan.")
-
 	var config tomlConfig
 	if _, err := toml.DecodeFile("config.toml", &config); err != nil {
 		fmt.Println(err)
@@ -32,8 +31,8 @@ func main() {
 
 	var wg sync.WaitGroup
 
-	for name, endpoint := range config.Endpoints {
-		fmt.Printf("Server: %s (%s, %s, %d)\n", name, endpoint.Name, endpoint.URL, endpoint.Timeout)
+	for _, endpoint := range config.Endpoints {
+		//fmt.Printf("Server: %s (%s, %s, %d)\n", name, endpoint.Name, endpoint.URL, endpoint.Timeout)
 		// Increment the WaitGroup counter.
 		wg.Add(1)
 		// req will be overwritten. take a copy for each iteration
@@ -53,13 +52,37 @@ func (e *endpoint) hitURL(wg *sync.WaitGroup) {
 	timeout := time.Duration(time.Duration(e.Timeout) * time.Millisecond)
 	client := http.Client{
 		Timeout: timeout,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
 	}
+
+	t0 := time.Now()
 	resp, err := client.Get(e.URL)
+	duration := time.Now().Sub(t0)
 
 	if err != nil {
-		fmt.Println("Error while getting \"" + e.URL + "\": " + err.Error())
+		color.Red(e.Name + " (" + e.URL + "): " + err.Error())
 		return
 	}
 
-	fmt.Println(resp.Status + " from " + e.URL)
+	s := resp.Status
+
+	outputString := fmt.Sprintf("%s | %s | %s | %v", resp.Status, e.Name, e.URL, duration)
+
+	switch {
+	case strings.HasPrefix(s, "1"): // 1XX Info
+		color.Cyan(outputString)
+	case strings.HasPrefix(s, "2"): // 2XX Success
+		color.Green(outputString)
+	case strings.HasPrefix(s, "3"): // 3XX Redirect
+		color.Magenta(outputString)
+	case strings.HasPrefix(s, "4"): // 4XX Client Erorr
+		color.Red(outputString)
+	case strings.HasPrefix(s, "5"): // 5XX Server Error
+		color.Red(outputString)
+	default:
+		color.White(outputString)
+	}
+
 }
