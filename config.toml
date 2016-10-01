@@ -1,0 +1,30 @@
+[[location]]
+name = "golang.org"
+url = "http://www.golang.org/"
+timeout = 1000
+
+[[location]]
+name = "google"
+url = "http://www.google.com/"
+timeout = 1000
+
+[[location]]
+name = "Non-existant domain"
+url = "http://www.somestupidname.com/"
+timeout = 1000
+
+[[location]]
+name = "BBC News"
+url = "http://www.bbc.co.uk/news"
+timeout = 1000
+
+[[location]]
+name = "XKCD"
+url = "http://www.xkcd.com/"
+timeout = 1000
+
+[[location]]
+name = "File not found"
+url = "https://github.com/tscott0/saijgs"
+timeout = 1000
+
