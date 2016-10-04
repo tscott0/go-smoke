@@ -30,6 +30,7 @@ func main() {
 	}
 
 	var wg sync.WaitGroup
+	var queue = make(chan string, 1)
 
 	for _, endpoint := range config.Endpoints {
 		//fmt.Printf("Server: %s (%s, %s, %d)\n", name, endpoint.Name, endpoint.URL, endpoint.Timeout)
@@ -38,15 +39,24 @@ func main() {
 		// req will be overwritten. take a copy for each iteration
 		e := endpoint
 		// Launch a goroutine to fetch the URL.
-		go e.hitURL(&wg)
+		go e.hitURL(&wg, queue)
 	}
 
-	wg.Wait()
+	go func() {
+		wg.Wait()
+		close(queue)
+	}()
+
+	// Range over queue channel to drain and print the output to screen
+	for s := range queue {
+		fmt.Println(s)
+	}
 
 }
 
-func (e *endpoint) hitURL(wg *sync.WaitGroup) {
+func (e *endpoint) hitURL(wg *sync.WaitGroup, q chan string) {
 	// Decrement the counter when the goroutine completes.
+	// Defer to allow the goroutine to fail
 	defer wg.Done()
 
 	timeout := time.Duration(time.Duration(e.Timeout) * time.Millisecond)
@@ -72,17 +82,17 @@ func (e *endpoint) hitURL(wg *sync.WaitGroup) {
 
 	switch {
 	case strings.HasPrefix(s, "1"): // 1XX Info
-		color.Cyan(outputString)
+		q <- color.CyanString(outputString)
 	case strings.HasPrefix(s, "2"): // 2XX Success
-		color.Green(outputString)
+		q <- color.GreenString(outputString)
 	case strings.HasPrefix(s, "3"): // 3XX Redirect
-		color.Magenta(outputString)
+		q <- color.MagentaString(outputString)
 	case strings.HasPrefix(s, "4"): // 4XX Client Erorr
-		color.Red(outputString)
+		q <- color.RedString(outputString)
 	case strings.HasPrefix(s, "5"): // 5XX Server Error
-		color.Red(outputString)
+		q <- color.RedString(outputString)
 	default:
-		color.White(outputString)
+		q <- color.WhiteString(outputString)
 	}
 
 }
