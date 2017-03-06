@@ -1,41 +1,39 @@
-[endpoints]
+[[endpoint]]
+name = "Golang.org"
+url = "https://golang.org/"
+timeout = 1000
 
-    [endpoints.golang]
-    name = "Golang.org"
-    url = "https://golang.org/"
-    timeout = 1000
+[[endpoint]]
+name = "Google UK"
+url = "https://www.google.co.uk/"
+timeout = 1000
 
-    [endpoints.google]
-    name = "Google UK"
-    url = "https://www.google.co.uk/"
-    timeout = 1000
+[[endpoint]]
+name = "Non-existant domain"
+url = "http://www.somestupidname.com/"
+timeout = 1000
 
-    [endpoints.stupidname]
-    name = "Non-existant domain"
-    url = "http://www.somestupidname.com/"
-    timeout = 1000
+[[endpoint]]
+name = "BBC News"
+url = "http://www.bbc.co.uk/news"
+timeout = 1000
 
-    [endpoints.bbcnews]
-    name = "BBC News"
-    url = "http://www.bbc.co.uk/news"
-    timeout = 1000
+[[endpoint]]
+name = "XKCD"
+url = "http://www.xkcd.com/"
+timeout = 1000
 
-    [endpoints.xkcd]
-    name = "XKCD"
-    url = "http://www.xkcd.com/"
-    timeout = 1000
+[[endpoint]]
+name = "File not found"
+url = "https://github.com/fatih/saijgs"
+timeout = 1000
 
-    [endpoints.github404]
-    name = "File not found"
-    url = "https://github.com/fatih/saijgs"
-    timeout = 1000
+[[endpoint]]
+name = "Server 503"
+url = "http://httpstat.us/503"
+timeout = 1000
 
-    [endpoints.httpstatus503]
-    name = "Server 503"
-    url = "http://httpstat.us/503"
-    timeout = 1000
-
-    [endpoints.httpstatus301]
-    name = "Server 301"
-    url = "http://httpstat.us/301"
-    timeout = 1000
+[[endpoint]]
+name = "Server 301"
+url = "http://httpstat.us/301"
+timeout = 1000

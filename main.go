@@ -11,14 +11,14 @@ import (
 	"github.com/fatih/color"
 )
 
-type tomlConfig struct {
-	Endpoints map[string]endpoint
-}
-
 type endpoint struct {
 	Name    string
 	URL     string
 	Timeout int
+}
+
+type tomlConfig struct {
+	Endpoint []endpoint
 }
 
 func main() {
@@ -32,7 +32,7 @@ func main() {
 	var wg sync.WaitGroup
 	var queue = make(chan string, 1)
 
-	for _, endpoint := range config.Endpoints {
+	for _, endpoint := range config.Endpoint {
 		//fmt.Printf("Server: %s (%s, %s, %d)\n", name, endpoint.Name, endpoint.URL, endpoint.Timeout)
 		// Increment the WaitGroup counter.
 		wg.Add(1)
@@ -68,6 +68,8 @@ func (e *endpoint) hitURL(wg *sync.WaitGroup, q chan string) {
 	}
 
 	t0 := time.Now()
+
+	// TODO: Add support for http methods here
 	resp, err := client.Get(e.URL)
 	duration := time.Now().Sub(t0)
 
@@ -76,23 +78,29 @@ func (e *endpoint) hitURL(wg *sync.WaitGroup, q chan string) {
 		return
 	}
 
-	s := resp.Status
+	statusLine := format(resp, e, duration)
+	q <- statusLine
 
-	outputString := fmt.Sprintf("%s | %s | %s | %v", resp.Status, e.Name, e.URL, duration)
+}
+
+func format(resp *http.Response, ep *endpoint, dur time.Duration) string {
+	var status string
 
 	switch {
-	case strings.HasPrefix(s, "1"): // 1XX Info
-		q <- color.CyanString(outputString)
-	case strings.HasPrefix(s, "2"): // 2XX Success
-		q <- color.GreenString(outputString)
-	case strings.HasPrefix(s, "3"): // 3XX Redirect
-		q <- color.MagentaString(outputString)
-	case strings.HasPrefix(s, "4"): // 4XX Client Erorr
-		q <- color.RedString(outputString)
-	case strings.HasPrefix(s, "5"): // 5XX Server Error
-		q <- color.RedString(outputString)
+	case strings.HasPrefix(resp.Status, "1"): // 1XX Info
+		status = color.CyanString(resp.Status)
+	case strings.HasPrefix(resp.Status, "2"): // 2XX Success
+		status = color.GreenString(resp.Status)
+	case strings.HasPrefix(resp.Status, "3"): // 3XX Redirect
+		status = color.MagentaString(resp.Status)
+	case strings.HasPrefix(resp.Status, "4"): // 4XX Client Erorr
+		status = color.RedString(resp.Status)
+	case strings.HasPrefix(resp.Status, "5"): // 5XX Server Error
+		status = color.RedString(resp.Status)
 	default:
-		q <- color.WhiteString(outputString)
+		status = color.WhiteString(resp.Status)
 	}
+
+	return fmt.Sprintf("%s | %s | %s | %v", status, ep.Name, ep.URL, dur)
 
 }
