@@ -21,6 +21,12 @@ type tomlConfig struct {
 	Endpoint []endpoint
 }
 
+type result struct {
+	endpoint
+	resp     *http.Response
+	respTime time.Duration
+}
+
 func main() {
 
 	var config tomlConfig
@@ -29,6 +35,9 @@ func main() {
 		return
 	}
 
+	var results []result
+	results = make([]result, 0)
+
 	var wg sync.WaitGroup
 	var queue = make(chan string, 1)
 
@@ -36,10 +45,13 @@ func main() {
 		//fmt.Printf("Server: %s (%s, %s, %d)\n", name, endpoint.Name, endpoint.URL, endpoint.Timeout)
 		// Increment the WaitGroup counter.
 		wg.Add(1)
-		// req will be overwritten. take a copy for each iteration
-		e := endpoint
+
+		// initialise a new result struct to wrap the endpoint
+		r := result{endpoint, nil, 0}
+		results = append(results, r)
+
 		// Launch a goroutine to fetch the URL.
-		go e.hitURL(&wg, queue)
+		go r.hitURL(&wg, queue)
 	}
 
 	go func() {
@@ -54,12 +66,12 @@ func main() {
 
 }
 
-func (e *endpoint) hitURL(wg *sync.WaitGroup, q chan string) {
+func (r *result) hitURL(wg *sync.WaitGroup, q chan string) {
 	// Decrement the counter when the goroutine completes.
 	// Defer to allow the goroutine to fail
 	defer wg.Done()
 
-	timeout := time.Duration(time.Duration(e.Timeout) * time.Millisecond)
+	timeout := time.Duration(time.Duration(r.Timeout) * time.Millisecond)
 	client := http.Client{
 		Timeout: timeout,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -70,21 +82,23 @@ func (e *endpoint) hitURL(wg *sync.WaitGroup, q chan string) {
 	t0 := time.Now()
 
 	// TODO: Add support for http methods here
-	resp, err := client.Get(e.URL)
+	resp, err := client.Get(r.URL)
 	duration := time.Now().Sub(t0)
 
 	if err != nil {
-		color.Red(e.Name + " (" + e.URL + "): " + err.Error())
+		color.Red(r.Name + " (" + r.URL + "): " + err.Error())
 		return
 	}
 
-	statusLine := format(resp, e, duration)
+	statusLine := format(resp, r, duration)
 	q <- statusLine
 
 }
 
-func format(resp *http.Response, ep *endpoint, dur time.Duration) string {
+func format(resp *http.Response, r *result, dur time.Duration) string {
 	var status string
+
+	ep := r.endpoint
 
 	switch {
 	case strings.HasPrefix(resp.Status, "1"): // 1XX Info
