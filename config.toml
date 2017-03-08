@@ -9,7 +9,7 @@ url = "https://www.google.co.uk/"
 timeout = 1000
 
 [[endpoint]]
-name = "Non-existant domain"
+name = "Non-existant"
 url = "http://www.somestupidname.com/"
 timeout = 1000
 
@@ -37,3 +37,13 @@ timeout = 1000
 name = "Server 301"
 url = "http://httpstat.us/301"
 timeout = 1000
+
+[[endpoint]]
+name = "Delayed timeout"
+url = "http://www.deelay.me/2000/https://www.google.co.uk"
+timeout = 1000
+
+[[endpoint]]
+name = "Delayed"
+url = "http://www.deelay.me/2000/https://www.google.co.uk"
+timeout = 10000
