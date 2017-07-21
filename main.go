@@ -10,21 +10,21 @@ import (
 	"github.com/fatih/color"
 )
 
-type tomlConfig struct {
-	Endpoints map[string]endpoint
-}
-
 type endpoint struct {
 	Name    string
 	URL     string
 	Timeout int
 }
 
+type endpoints struct {
+	Endpoint []endpoint
+}
+
 func main() {
 
 	color.Cyan("Prints text in cyan.")
 
-	var config tomlConfig
+	var config endpoints
 	if _, err := toml.DecodeFile("config.toml", &config); err != nil {
 		fmt.Println(err)
 		return
@@ -32,8 +32,8 @@ func main() {
 
 	var wg sync.WaitGroup
 
-	for name, endpoint := range config.Endpoints {
-		fmt.Printf("Server: %s (%s, %s, %d)\n", name, endpoint.Name, endpoint.URL, endpoint.Timeout)
+	for _, endpoint := range config.Endpoint {
+		fmt.Printf("Server: (%s, %s, %d)\n", endpoint.Name, endpoint.URL, endpoint.Timeout)
 		// Increment the WaitGroup counter.
 		wg.Add(1)
 		// req will be overwritten. take a copy for each iteration
