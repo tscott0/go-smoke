@@ -1,15 +1,15 @@
 [[endpoint]]
 name = "Golang.org"
-url = "http://www.golang.org/"
+url = "https://golang.org/"
 timeout = 1000
 
 [[endpoint]]
-name = "Google"
-url = "http://www.google.com/"
+name = "Google UK"
+url = "https://www.google.co.uk/"
 timeout = 1000
 
 [[endpoint]]
-name = "Non-existant domain"
+name = "Non-existant"
 url = "http://www.somestupidname.com/"
 timeout = 1000
 
@@ -27,3 +27,23 @@ timeout = 1000
 name = "File not found"
 url = "https://github.com/fatih/saijgs"
 timeout = 1000
+
+[[endpoint]]
+name = "Server 503"
+url = "http://httpstat.us/503"
+timeout = 1000
+
+[[endpoint]]
+name = "Server 301"
+url = "http://httpstat.us/301"
+timeout = 1000
+
+[[endpoint]]
+name = "Delayed timeout"
+url = "http://www.deelay.me/2000/https://www.google.co.uk"
+timeout = 1000
+
+[[endpoint]]
+name = "Delayed"
+url = "http://www.deelay.me/2000/https://www.google.co.uk"
+timeout = 10000
