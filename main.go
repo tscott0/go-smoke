@@ -2,15 +2,14 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/BurntSushi/toml"
 	"github.com/fatih/color"
-	ui "github.com/gizak/termui"
 )
 
 type endpoint struct {
@@ -31,24 +30,12 @@ type result struct {
 
 func main() {
 
-	err := ui.Init()
+	var config tomlConfig
+
+	_, err := toml.DecodeFile("config.toml", &config)
+
 	if err != nil {
-		panic(err)
-	}
-	defer ui.Close()
-
-	table1 := ui.NewTable()
-	table1.FgColor = ui.ColorWhite
-	table1.BgColor = ui.ColorDefault
-	table1.Y = 0
-	table1.X = 0
-	table1.Width = 150
-	table1.Height = 4
-
-	var config endpoints
-	if _, err := toml.DecodeFile("config.toml", &config); err != nil {
-		//fmt.Println(err)
-		return
+		log.Fatalf("failed to read config.toml: %s", err)
 	}
 
 	var results []*result
@@ -75,56 +62,11 @@ func main() {
 		close(queue)
 	}()
 
-	// build layout
-	ui.Body.AddRows(
-		ui.NewRow(
-			ui.NewCol(12, 0, table1)))
-
-	// calculate layout
-	ui.Body.Align()
-
-	rows1 := make([][]string, 1+len(config.Endpoint))
-	rows1[0] = []string{"Name", "URL", "Timeout", "Response", "Duration"}
-
-	draw := func(t int) {
-		table1.Height = 3 + (2 * len(results))
-		i := 1
-		for _, r := range results {
-
-			rows1[i] = []string{r.Name, r.URL, strconv.Itoa(r.Timeout), r.status, r.respTime.String()}
-			i++
-		}
-		table1.Rows = rows1
-		ui.Render(ui.Body)
-	}
-
-	// TODO: Bit of a hack. Not sure why it doesn't draw immediately
-	draw(0)
-
-	ui.Handle("/sys/kbd/q", func(ui.Event) {
-		ui.StopLoop()
-	})
-
-	ui.Handle("/timer/1s", func(e ui.Event) {
-		t := e.Data.(ui.EvtTimer)
-		draw(int(t.Count))
-	})
-
-	ui.Handle("/sys/wnd/resize", func(e ui.Event) {
-		ui.Body.Width = ui.TermWidth()
-		ui.Body.Align()
-		ui.Clear()
-		ui.Render(ui.Body)
-	})
-
-	ui.Loop()
-
 	// Range over queue channel to drain and print the output to screen
-	//for s := range queue {
-	//fmt.Println(s)
-	//_ = s
-	//}
-
+	for s := range queue {
+		fmt.Println(s)
+		_ = s
+	}
 }
 
 func (r *result) hitURL(wg *sync.WaitGroup, q chan string) {
@@ -132,7 +74,7 @@ func (r *result) hitURL(wg *sync.WaitGroup, q chan string) {
 	// Defer to allow the goroutine to fail
 	defer wg.Done()
 
-	timeout := time.Duration(time.Duration(r.Timeout) * time.Millisecond)
+	timeout := time.Duration(r.Timeout) * time.Millisecond
 	client := http.Client{
 		Timeout: timeout,
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -141,13 +83,13 @@ func (r *result) hitURL(wg *sync.WaitGroup, q chan string) {
 	}
 
 	t0 := time.Now()
-
 	// TODO: Add support for http methods here
+	// TODO: Should probably use "net/http/httptrace" for measuring more accurately
 	resp, err := client.Get(r.URL)
 	duration := time.Now().Sub(t0)
 
 	if err != nil {
-		//color.Red(r.Name + " (" + r.URL + "): " + err.Error())
+		// color.Red(r.Name + " (" + r.URL + "): " + err.Error())
 		return
 	}
 
